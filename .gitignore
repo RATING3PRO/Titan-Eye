@@ -1,0 +1,10 @@
+# Python cache and venv
+__pycache__/
+*.pyc
+.venv/
+
+# Local data and media
+testvideo/
+
+# Large model weights
+yolov8*.pt

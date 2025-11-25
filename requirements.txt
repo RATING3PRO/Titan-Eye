@@ -1,0 +1,15 @@
+# Deep Learning Framework
+torch
+torchvision
+
+# YOLOv8 and its dependencies
+ultralytics
+
+# Computer Vision and numerical operations
+opencv-python-headless
+numpy
+imageio
+imageio-ffmpeg
+
+# Utilities
+matplotlib
