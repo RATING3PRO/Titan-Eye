@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from kalman_filter import KalmanFilter
-from typing import List, Dict
+from typing import List
 
 # ----------------- 0. 辅助函数和配置 -----------------
 
@@ -123,40 +123,10 @@ def nms_detections(dets, iou_thresh=0.5):
     return keep
 
 
-def filter_phones_with_persons(dets, phone_cls=67, person_cls=0, overlap_thresh=0.05):
-    """
-    保留与 person 有一定重叠的 phone，减少飘移/误检。
-    """
-    persons = [d for d in dets if d["cls"] == person_cls]
-    if not persons:
-        return dets
-    phones = [d for d in dets if d["cls"] == phone_cls]
-    others = [d for d in dets if d["cls"] not in (person_cls, phone_cls)]
-    filtered_phones = []
-    for ph in phones:
-        ph_box = ph["box"]
-        area_ph = (ph_box[2] - ph_box[0]) * (ph_box[3] - ph_box[1])
-        if area_ph <= 0:
-            continue
-        for person in persons:
-            ps_box = person["box"]
-            xx1 = max(ph_box[0], ps_box[0])
-            yy1 = max(ph_box[1], ps_box[1])
-            xx2 = min(ph_box[2], ps_box[2])
-            yy2 = min(ph_box[3], ps_box[3])
-            w = max(0.0, xx2 - xx1)
-            h = max(0.0, yy2 - yy1)
-            inter = w * h
-            if inter / area_ph >= overlap_thresh:
-                filtered_phones.append(ph)
-                break
-    return persons + filtered_phones + others
-
-
 def main():
     # ----------------- 1. 初始化和配置 -----------------
     # 指定单个视频源：改这里即可
-    video_path = "testvideo/2.mp4"
+    video_path = "testvideo/1.mp4"
 
     # 初始阈值与自适应策略
     yolo_conf = 0.5          # 起始置信度阈值，自适应会上下微调
@@ -250,9 +220,8 @@ def main():
                     'emb': color_hist_embedding(frame, xyxy)
                 })
 
-        # NMS + 约束手机必须与人重叠
+        # NMS
         detections = nms_detections(detections, iou_thresh=0.5)
-        detections = filter_phones_with_persons(detections, phone_cls=67, person_cls=0, overlap_thresh=0.05)
 
         # 简单自适应：无检测若连续出现则降低阈值，检测过多则升高阈值
         if auto_tune:
